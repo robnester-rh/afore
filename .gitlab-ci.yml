@@ -1,0 +1,66 @@
+#image: "docker-registry.default.svc:5000/rhprod/rhprod-test-container"
+
+#variables:
+#  SONAR_SCANNER_OPTS: "-Djavax.net.ssl.trustStore=/etc/pki/java/cacerts -Djavax.net.ssl.keyStore=/etc/pki/java/cacerts -Djavax.net.ssl.keyStorePassword=changeit"
+
+stages:
+  - build
+  - test
+  - analyze
+  - deploy
+
+before_script:
+  - mkdir -p .cache
+  - export GOPATH="$CI_PROJECT_DIR/.cache"
+
+#build development:
+#  stage: build
+#  only:
+#    - development
+#  script:
+##    - go build -o afore  -ldflags "-X gitlab.sat.engineering.redhat.com/rhprod/rhprod-cli/cmd.Version=`git rev-parse --short=8 HEAD`"
+#
+#test:
+#  stage: test
+#  only:
+#    - merge_requests
+#    - development
+#    - master
+#  script:
+#    - go test -coverprofile=cov.out ./...
+#
+#  artifacts:
+#    paths:
+#      - cov.out
+#    expire_in: 10 mins
+#    when: always
+#
+#merge request code analysis:
+#  stage: analyze
+#  only:
+#    - merge_requests
+#  script:
+##    - sonar-scanner -X -Dsonar.host.url=$SONAR_URL -Dsonar.login=$SONAR_LOGIN -Dsonar.branch.name=$CI_COMMIT_REF_NAME -Dsonar.branch.target=$CI_MERGE_REQUEST_TARGET_BRANCH_NAME -Dsonar.gitlab.url=$GITLAB_URL -Dsonar.gitlab.user_token=$GITLAB_TOKEN -Dsonar.gitlab.commit_sha=$CI_COMMIT_SHA -Dsonar.gitlab.ref_name=$CI_COMMIT_REF_NAME -Dsonar.gitlab.project_id=$CI_PROJECT_ID -Dsonar.gitlab.ci_merge_request_iid=$CI_MERGE_REQUEST_IID
+#
+#development code analysis:
+#  stage: analyze
+#  only:
+#    - development
+#  script:
+#    - sonar-scanner -Dsonar.host.url=$SONAR_URL -Dsonar.login=$SONAR_LOGIN -Dsonar.branch.name=$CI_COMMIT_REF_NAME
+#  allow_failure: true
+#
+##master code analysis:
+##  stage: analyze
+##  only:
+##    - master
+##  script:
+##    - sonar-scanner -Dsonar.host.url=$SONAR_URL -Dsonar.login=$SONAR_LOGIN -Dsonar.branch.name=$CI_COMMIT_REF_NAME
+##  allow_failure: true
+
+deploy master:
+  stage: deploy
+  only:
+    - master
+  script:
+    - NODE_TLS_REJECT_UNAUTHORIZED=0 npx semantic-release
